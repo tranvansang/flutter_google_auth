@@ -9,8 +9,8 @@ class GoogleAuthPlugin : FlutterPlugin, ActivityAware {
 	private var delegate: GoogleAuthDelegate? = null
 	private var detachFromEngineCallback: Runnable? = null
 	override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-		val methodChannel = MethodChannel(flutterPluginBinding.getBinaryMessenger(), CHANNEL_NAME)
-		delegate = GoogleAuthDelegate(flutterPluginBinding.getApplicationContext())
+		val methodChannel = MethodChannel(flutterPluginBinding.binaryMessenger, CHANNEL_NAME)
+		delegate = GoogleAuthDelegate(flutterPluginBinding.applicationContext)
 		methodChannel.setMethodCallHandler(GoogleAuthMethodCallHandler(delegate!!))
 		detachFromEngineCallback = Runnable {
 			methodChannel.setMethodCallHandler(null)

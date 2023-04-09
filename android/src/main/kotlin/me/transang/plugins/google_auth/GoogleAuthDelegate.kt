@@ -1,5 +1,5 @@
 package me.transang.plugins.google_auth
-;
+
 import android.app.Activity
 import android.content.Context
 import android.content.IntentSender.SendIntentException
@@ -12,16 +12,11 @@ import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.MethodChannel
 
 class GoogleAuthDelegate(private val context: Context) : Activity() {
-	private val signInClient: SignInClient
-	private val googleAuthActivity: GoogleAuthActivity
+	private val signInClient: SignInClient = Identity.getSignInClient(context)
+	private val googleAuthActivity: GoogleAuthActivity = GoogleAuthActivity(signInClient)
 	private var detachFromActivityRunnable: Runnable? = null
 	private var activity: Activity? = null
 	private var resultConsumer: ResultConsumer<String>? = null
-
-	init {
-		signInClient = Identity.getSignInClient(context)
-		googleAuthActivity = GoogleAuthActivity(signInClient)
-	}
 
 	fun attachToActivity(activityPluginBinding: ActivityPluginBinding) {
 		activityPluginBinding.addActivityResultListener(googleAuthActivity)
@@ -62,7 +57,7 @@ class GoogleAuthDelegate(private val context: Context) : Activity() {
 			.addOnSuccessListener { beginSignInResult ->
 				try {
 					activity!!.startIntentSenderForResult(
-						beginSignInResult.getPendingIntent().getIntentSender(),
+						beginSignInResult.pendingIntent.intentSender,
 						GoogleAuthActivity.REQUEST_ONE_TAP,
 						null,
 						0,
@@ -85,7 +80,7 @@ class GoogleAuthDelegate(private val context: Context) : Activity() {
 								.requestIdToken(clientId) //								.requestServerAuthCode(clientId)
 								.build()
 						)
-						.getSignInIntent(),
+						.signInIntent,
 					GoogleAuthActivity.REQUEST_CODE_SIGN_IN
 				)
 			}

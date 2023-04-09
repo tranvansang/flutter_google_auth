@@ -20,21 +20,20 @@ class ResultConsumer<T>(
 
 	fun throwError(e: Exception?) {
 		assert(result != null)
-		var nonNullResult = result!!
+		val nonNullResult = result!!
 		if (e is SendIntentException) {
 			nonNullResult.error("FAIL_TO_SEND_INTENT", e.message, e)
 		} else if (e is ApiException) {
-			val statusCode: Int? = (e as ApiException?)?.getStatusCode()
-			when (statusCode) {
+			when ((e as ApiException?)?.statusCode) {
 				CommonStatusCodes.CANCELED -> nonNullResult.error("API_CANCELLED", e!!.message, e)
 				CommonStatusCodes.NETWORK_ERROR -> nonNullResult.error("API_NETWORK_ERROR", e!!.message, e)
 				GoogleSignInStatusCodes.SIGN_IN_CANCELLED -> nonNullResult.error(
 					"API_SIGN_IN_CANCELLED",
-					e!!.message,
+					e.message,
 					e
 				)
 				CommonStatusCodes.SIGN_IN_REQUIRED -> nonNullResult.error("API_SIGN_IN_REQUIRED", e!!.message, e)
-				else -> nonNullResult.error("API_OTHER", e!!.message, e)
+				else -> nonNullResult.error("API_OTHER", e.message, e)
 			}
 		} else if (e == null) nonNullResult.error(
 			"NO_DATA",

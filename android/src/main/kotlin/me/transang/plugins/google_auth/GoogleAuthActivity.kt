@@ -24,7 +24,7 @@ class GoogleAuthActivity(signInClient: SignInClient) : PluginRegistry.ActivityRe
 //					String idToken = signInCredential.getGoogleIdToken();
 //					String username = signInCredential.getId();
 //					String password = signInCredential.getPassword();
-					var token = signInClient.getSignInCredentialFromIntent(data).getGoogleIdToken()
+					val token = signInClient.getSignInCredentialFromIntent(data).googleIdToken
 					if (token != null) resultConsumer?.consume(token)
 					else resultConsumer?.throwError(Exception("Empty token returned"))
 				} catch (e: Exception) {
@@ -36,11 +36,13 @@ class GoogleAuthActivity(signInClient: SignInClient) : PluginRegistry.ActivityRe
 				if (data != null) {
 					GoogleSignIn
 						.getSignedInAccountFromIntent(data)
-						.addOnSuccessListener { account -> {
-							var token = account.getIdToken()
-							if (token == null) resultConsumer?.throwError(Exception("Empty token from account"))
-							else resultConsumer?.consume(token)
-						} }
+						.addOnSuccessListener { account ->
+							run {
+								val token = account.idToken
+								if (token == null) resultConsumer?.throwError(Exception("Empty token from account"))
+								else resultConsumer?.consume(token)
+							}
+						}
 						.addOnFailureListener { e -> resultConsumer?.throwError(e) }
 				} else {
 					// data is null which is highly unusual for a sign in result.
@@ -52,8 +54,8 @@ class GoogleAuthActivity(signInClient: SignInClient) : PluginRegistry.ActivityRe
 		return false
 	}
 
-	fun setResultConsumer(resultConsumer: ResultConsumer<String>?) {
-		this.resultConsumer = resultConsumer
+	fun setResultConsumer(newResultConsumer: ResultConsumer<String>?) {
+		resultConsumer = newResultConsumer
 	}
 
 	companion object {
