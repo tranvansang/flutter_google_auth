@@ -7,53 +7,51 @@ import com.google.android.gms.common.api.CommonStatusCodes
 import io.flutter.plugin.common.MethodChannel
 
 class ResultConsumer<T>(
-	_result: MethodChannel.Result,
-	_onEnd: Runnable
+	private val result: MethodChannel.Result,
+	private val onDone: () -> Unit
 ) {
-	private var result: MethodChannel.Result? = _result
-	private val onEnd = _onEnd
-
+	private var isDone = false
 	fun throwError(e: Exception?) {
-		val nonNullResult = result!!
+		if (isDone) throw Exception("ResultConsumer is already done")
 		when (e) {
 			is SendIntentException -> {
-				nonNullResult.error("FAIL_TO_SEND_INTENT", e.message, e)
+				result.error("FAIL_TO_SEND_INTENT", e.message, e)
 			}
 			is ApiException -> {
 				when ((e as ApiException?)?.statusCode) {
-					CommonStatusCodes.CANCELED -> nonNullResult.error("API_CANCELLED", e.message, e)
-					CommonStatusCodes.NETWORK_ERROR -> nonNullResult.error("API_NETWORK_ERROR", e.message, e)
-					GoogleSignInStatusCodes.SIGN_IN_CANCELLED -> nonNullResult.error(
+					CommonStatusCodes.CANCELED -> result.error("API_CANCELLED", e.message, e)
+					CommonStatusCodes.NETWORK_ERROR -> result.error("API_NETWORK_ERROR", e.message, e)
+					GoogleSignInStatusCodes.SIGN_IN_CANCELLED -> result.error(
 						"API_SIGN_IN_CANCELLED",
 						e.message,
 						e
 					)
-					CommonStatusCodes.SIGN_IN_REQUIRED -> nonNullResult.error(
+					CommonStatusCodes.SIGN_IN_REQUIRED -> result.error(
 						"API_SIGN_IN_REQUIRED",
 						e.message,
 						e
 					)
-					else -> nonNullResult.error("API_OTHER", e.message, e)
+					else -> result.error("API_OTHER", e.message, e)
 				}
 			}
-			null -> nonNullResult.error(
+			null -> result.error(
 				"NO_DATA",
 				"No data provided",
 				null
 			)
-			else -> nonNullResult.error("OTHER", e.message, e)
+			else -> result.error("OTHER", e.message, e)
 		}
 		end()
 	}
 
 	fun consume(value: T) {
-		assert(result != null)
-		result!!.success(value)
+		if (isDone) throw Exception("ResultConsumer is already done")
+		result.success(value)
 		end()
 	}
 
 	private fun end() {
-		onEnd.run()
-		result = null
+		isDone = true
+		onDone()
 	}
 }

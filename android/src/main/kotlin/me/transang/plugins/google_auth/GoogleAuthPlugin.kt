@@ -7,37 +7,52 @@ import io.flutter.plugin.common.MethodChannel
 
 class GoogleAuthPlugin : FlutterPlugin, ActivityAware {
 	private var delegate: GoogleAuthDelegate? = null
-	private var detachFromEngineCallback: Runnable? = null
+	private var detachFromEngine: (() -> Unit)? = null
+	private var detachFromActivity: (() -> Unit)? = null
+
+	// BEGIN attach to engine
 	override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
 		val methodChannel = MethodChannel(flutterPluginBinding.binaryMessenger, CHANNEL_NAME)
 		delegate = GoogleAuthDelegate(flutterPluginBinding.applicationContext)
 		methodChannel.setMethodCallHandler(GoogleAuthMethodCallHandler(delegate!!))
-		detachFromEngineCallback = Runnable {
+		detachFromEngine = {
 			methodChannel.setMethodCallHandler(null)
 			delegate = null
+			detachFromEngine = null
 		}
 	}
 
 	override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-		detachFromEngineCallback!!.run()
-		detachFromEngineCallback = null
+		detachFromEngine?.invoke()
 	}
+	// END attach to engine
 
+	// BEGIN attach to activity
 	override fun onAttachedToActivity(binding: ActivityPluginBinding) {
-		delegate!!.attachToActivity(binding)
-	}
-
-	override fun onDetachedFromActivityForConfigChanges() {
-		delegate!!.detachFromActivity()
-	}
-
-	override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
-		delegate!!.attachToActivity(binding)
+		binding.addActivityResultListener(delegate!!.activityResultListener)
+		delegate!!.activity = binding.activity
+		detachFromActivity = {
+			delegate!!.activity = null
+			binding.removeActivityResultListener(delegate!!.activityResultListener)
+			detachFromActivity = null
+		}
 	}
 
 	override fun onDetachedFromActivity() {
-		delegate!!.detachFromActivity()
+		detachFromActivity?.invoke()
 	}
+	// END attach to activity
+
+	// BEGIN temporary detach from activity
+	override fun onDetachedFromActivityForConfigChanges() {
+		detachFromActivity?.invoke()
+	}
+
+	override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
+		onAttachedToActivity(binding)
+	}
+	// END temporary detach from activity
+
 
 	companion object {
 		private const val CHANNEL_NAME = "me.transang.plugins.google_auth/channel"

@@ -20,8 +20,7 @@ class GoogleAuthMethodCallHandler(private val delegate: GoogleAuthDelegate) :
 					result.error("Error when sign in", e.message, null)
 				}
 			METHOD_SIGN_OUT -> try {
-				delegate.signOut()
-				result.success(true)
+				delegate.signOut(result)
 			} catch (e: Exception) {
 				result.error("Error when sign out", e.message, null)
 			}

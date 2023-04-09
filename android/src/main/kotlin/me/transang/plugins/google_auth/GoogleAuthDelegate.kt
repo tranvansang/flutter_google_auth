@@ -8,37 +8,55 @@ import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.MethodChannel
 
-class GoogleAuthDelegate(private val context: Context) : Activity() {
-	private val signInClient: SignInClient = Identity.getSignInClient(context)
-	private val googleAuthActivity: GoogleAuthActivity = GoogleAuthActivity(signInClient)
-	private var detachFromActivityRunnable: Runnable? = null
-	private var activity: Activity? = null
-	private var resultConsumer: ResultConsumer<String>? = null
+class GoogleAuthDelegate(private val applicationContext: Context) {
+	private val signInClient: SignInClient = Identity.getSignInClient(applicationContext)
 
-	fun attachToActivity(activityPluginBinding: ActivityPluginBinding) {
-		activityPluginBinding.addActivityResultListener(googleAuthActivity)
-		activity = activityPluginBinding.activity
-		detachFromActivityRunnable = Runnable {
-			activity = null
-			activityPluginBinding.removeActivityResultListener(googleAuthActivity)
+	val activityResultListener = GoogleAuthActivityResultListener({
+		try {
+//					SignInCredential signInCredential = signInClient.getSignInCredentialFromIntent(data);
+//					String idToken = signInCredential.getGoogleIdToken();
+//					String username = signInCredential.getId();
+//					String password = signInCredential.getPassword();
+			val token = signInClient.getSignInCredentialFromIntent(it).googleIdToken
+			if (token != null) resultConsumer?.consume(token)
+			else resultConsumer?.throwError(Exception("Empty token returned"))
+		} catch (e: Exception) {
+			resultConsumer?.throwError(e)
 		}
-	}
+	}, {
+		if (it != null) {
+			GoogleSignIn
+				.getSignedInAccountFromIntent(it)
+				.addOnSuccessListener { account ->
+					run {
+						val token = account.idToken
+						if (token == null) resultConsumer?.throwError(Exception("Empty token from account"))
+						else resultConsumer?.consume(token)
+					}
+				}
+				.addOnFailureListener { e -> resultConsumer?.throwError(e) }
+		} else {
+			// data is null which is highly unusual for a sign in result.
+			resultConsumer?.throwError(null)
+		}
+	})
+	private var resultConsumer: ResultConsumer<Any>? = null
+	var activity: Activity? = null
 
-	fun detachFromActivity() {
-		detachFromActivityRunnable!!.run()
-		detachFromActivityRunnable = null
+	private fun setup(result: MethodChannel.Result) {
+		if (resultConsumer != null) {
+			resultConsumer?.throwError(Exception("New operation arrived before the current one finished"))
+		}
+		resultConsumer = ResultConsumer(result) { resultConsumer = null }
 	}
 
 	fun signIn(
 		clientId: String,
 		result: MethodChannel.Result
 	) {
-		assert(resultConsumer == null)
-		resultConsumer = ResultConsumer(result) { resultConsumer = null }
-		googleAuthActivity.setResultConsumer(resultConsumer)
+		setup(result)
 		signInClient
 			.beginSignIn(
 				BeginSignInRequest
@@ -58,7 +76,7 @@ class GoogleAuthDelegate(private val context: Context) : Activity() {
 				try {
 					activity!!.startIntentSenderForResult(
 						beginSignInResult.pendingIntent.intentSender,
-						GoogleAuthActivity.REQUEST_ONE_TAP,
+						GoogleAuthActivityResultListener.REQUEST_ONE_TAP,
 						null,
 						0,
 						0,
@@ -75,22 +93,20 @@ class GoogleAuthDelegate(private val context: Context) : Activity() {
 				activity!!.startActivityForResult(
 					GoogleSignIn
 						.getClient(
-							context,
+							applicationContext,
 							GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN) //								.requestEmail()
 								.requestIdToken(clientId) //								.requestServerAuthCode(clientId)
 								.build()
 						)
 						.signInIntent,
-					GoogleAuthActivity.REQUEST_CODE_SIGN_IN
+					GoogleAuthActivityResultListener.REQUEST_CODE_SIGN_IN
 				)
 			}
 	}
 
-	fun signOut() {
+	fun signOut(result: MethodChannel.Result) {
+		setup(result)
 		signInClient.signOut()
-	}
-
-	companion object {
-		private const val TAG = "GoogleSignInDelegate"
+		resultConsumer?.consume(true)
 	}
 }
