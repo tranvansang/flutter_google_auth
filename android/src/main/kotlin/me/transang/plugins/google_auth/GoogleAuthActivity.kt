@@ -1,8 +1,6 @@
 package me.transang.plugins.google_auth
 
 import android.content.Intent
-import android.os.Build
-import androidx.annotation.RequiresApi
 import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import io.flutter.plugin.common.PluginRegistry
@@ -15,7 +13,6 @@ class GoogleAuthActivity(signInClient: SignInClient) : PluginRegistry.ActivityRe
 		this.signInClient = signInClient
 	}
 
-	@RequiresApi(api = Build.VERSION_CODES.N)
 	override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
 		when (requestCode) {
 			REQUEST_ONE_TAP -> {

@@ -20,7 +20,7 @@ class GoogleAuthDelegate(private val context: Context) : Activity() {
 
 	fun attachToActivity(activityPluginBinding: ActivityPluginBinding) {
 		activityPluginBinding.addActivityResultListener(googleAuthActivity)
-		activity = activityPluginBinding.getActivity()
+		activity = activityPluginBinding.activity
 		detachFromActivityRunnable = Runnable {
 			activity = null
 			activityPluginBinding.removeActivityResultListener(googleAuthActivity)
@@ -71,7 +71,7 @@ class GoogleAuthDelegate(private val context: Context) : Activity() {
 					resultConsumer?.throwError(e)
 				}
 			}
-			.addOnFailureListener { e ->
+			.addOnFailureListener {
 				activity!!.startActivityForResult(
 					GoogleSignIn
 						.getClient(
