@@ -16,7 +16,7 @@ class GoogleAuthActivity(signInClient: SignInClient) : PluginRegistry.ActivityRe
 	}
 
 	@RequiresApi(api = Build.VERSION_CODES.N)
-	fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
+	override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
 		when (requestCode) {
 			REQUEST_ONE_TAP -> {
 				try {
@@ -24,11 +24,11 @@ class GoogleAuthActivity(signInClient: SignInClient) : PluginRegistry.ActivityRe
 //					String idToken = signInCredential.getGoogleIdToken();
 //					String username = signInCredential.getId();
 //					String password = signInCredential.getPassword();
-					resultConsumer.consume(
-						signInClient.getSignInCredentialFromIntent(data).getGoogleIdToken()
-					)
+					var token = signInClient.getSignInCredentialFromIntent(data).getGoogleIdToken()
+					if (token != null) resultConsumer?.consume(token)
+					else resultConsumer?.throwError(Exception("Empty token returned"))
 				} catch (e: Exception) {
-					resultConsumer.throwError(e)
+					resultConsumer?.throwError(e)
 				}
 				return true
 			}
@@ -36,11 +36,15 @@ class GoogleAuthActivity(signInClient: SignInClient) : PluginRegistry.ActivityRe
 				if (data != null) {
 					GoogleSignIn
 						.getSignedInAccountFromIntent(data)
-						.addOnSuccessListener { account -> resultConsumer.consume(account.getIdToken()) }
-						.addOnFailureListener { e -> resultConsumer.throwError(e) }
+						.addOnSuccessListener { account -> {
+							var token = account.getIdToken()
+							if (token == null) resultConsumer?.throwError(Exception("Empty token from account"))
+							else resultConsumer?.consume(token)
+						} }
+						.addOnFailureListener { e -> resultConsumer?.throwError(e) }
 				} else {
 					// data is null which is highly unusual for a sign in result.
-					resultConsumer.throwError(null)
+					resultConsumer?.throwError(null)
 				}
 				return true
 			}
@@ -48,7 +52,7 @@ class GoogleAuthActivity(signInClient: SignInClient) : PluginRegistry.ActivityRe
 		return false
 	}
 
-	fun setResultConsumer(resultConsumer: ResultConsumer<String?>) {
+	fun setResultConsumer(resultConsumer: ResultConsumer<String>?) {
 		this.resultConsumer = resultConsumer
 	}
 

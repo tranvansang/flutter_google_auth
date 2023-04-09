@@ -7,7 +7,7 @@ import com.google.android.gms.common.api.CommonStatusCodes
 import io.flutter.plugin.common.MethodChannel
 
 class ResultConsumer<T>(
-	@NonNull result: MethodChannel.Result?,
+	result: MethodChannel.Result,
 	onEnd: Runnable
 ) {
 	private var result: MethodChannel.Result?
@@ -20,32 +20,33 @@ class ResultConsumer<T>(
 
 	fun throwError(e: Exception?) {
 		assert(result != null)
+		var nonNullResult = result!!
 		if (e is SendIntentException) {
-			result.error("FAIL_TO_SEND_INTENT", e.message, e)
+			nonNullResult.error("FAIL_TO_SEND_INTENT", e.message, e)
 		} else if (e is ApiException) {
-			val statusCode: Int = (e as ApiException?).getStatusCode()
+			val statusCode: Int? = (e as ApiException?)?.getStatusCode()
 			when (statusCode) {
-				CommonStatusCodes.CANCELED -> result.error("API_CANCELLED", e!!.message, e)
-				CommonStatusCodes.NETWORK_ERROR -> result.error("API_NETWORK_ERROR", e!!.message, e)
-				GoogleSignInStatusCodes.SIGN_IN_CANCELLED -> result.error(
+				CommonStatusCodes.CANCELED -> nonNullResult.error("API_CANCELLED", e!!.message, e)
+				CommonStatusCodes.NETWORK_ERROR -> nonNullResult.error("API_NETWORK_ERROR", e!!.message, e)
+				GoogleSignInStatusCodes.SIGN_IN_CANCELLED -> nonNullResult.error(
 					"API_SIGN_IN_CANCELLED",
 					e!!.message,
 					e
 				)
-				CommonStatusCodes.SIGN_IN_REQUIRED -> result.error("API_SIGN_IN_REQUIRED", e!!.message, e)
-				else -> result.error("API_OTHER", e!!.message, e)
+				CommonStatusCodes.SIGN_IN_REQUIRED -> nonNullResult.error("API_SIGN_IN_REQUIRED", e!!.message, e)
+				else -> nonNullResult.error("API_OTHER", e!!.message, e)
 			}
-		} else if (e == null) result.error(
+		} else if (e == null) nonNullResult.error(
 			"NO_DATA",
 			"No data provided",
 			null
-		) else result.error("OTHER", e.message, e)
+		) else nonNullResult.error("OTHER", e.message, e)
 		end()
 	}
 
 	fun consume(value: T) {
 		assert(result != null)
-		result.success(value)
+		result!!.success(value)
 		end()
 	}
 
