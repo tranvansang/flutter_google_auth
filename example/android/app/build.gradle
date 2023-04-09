@@ -60,6 +60,7 @@ android {
             signingConfig signingConfigs.debug
         }
     }
+	namespace 'me.transang.plugins.google_auth.google_auth_example'
 }
 
 flutter {
