@@ -1,23 +1,26 @@
 package me.transang.plugins.google_auth
 
-import me.transang.plugins.google_auth.GoogleAuthActivity.REQUEST_CODE_SIGN_IN
-import me.transang.plugins.google_auth.GoogleAuthActivity.REQUEST_ONE_TAP
+import android.app.Activity
+import android.content.Context
+import android.content.IntentSender.SendIntentException
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
+import io.flutter.plugin.common.MethodChannel
+import me.transang.plugins.google_auth.GoogleAuthActivity.REQUEST_CODE_SIGN_IN
+import me.transang.plugins.google_auth.GoogleAuthActivity.REQUEST_ONE_TAP
 
-class GoogleAuthDelegate(context: android.content.Context) : Activity() {
+class GoogleAuthDelegate(private val context: Context) : Activity() {
 	private val signInClient: SignInClient
 	private val googleAuthActivity: GoogleAuthActivity
 	private var detachFromActivityRunnable: Runnable? = null
 	private var activity: Activity? = null
-	private val context: android.content.Context
 	private var resultConsumer: ResultConsumer<String>? = null
 
 	init {
-		this.context = context
 		signInClient = Identity.getSignInClient(context)
 		googleAuthActivity = GoogleAuthActivity(signInClient)
 	}
@@ -32,13 +35,13 @@ class GoogleAuthDelegate(context: android.content.Context) : Activity() {
 	}
 
 	fun detachFromActivity() {
-		detachFromActivityRunnable.run()
+		detachFromActivityRunnable!!.run()
 		detachFromActivityRunnable = null
 	}
 
 	fun signIn(
 		clientId: String?,
-		result: MethodChannel.Result
+		@NonNull result: MethodChannel.Result?
 	) {
 		assert(resultConsumer == null)
 		resultConsumer = ResultConsumer(result) { resultConsumer = null }
@@ -60,7 +63,7 @@ class GoogleAuthDelegate(context: android.content.Context) : Activity() {
 			)
 			.addOnSuccessListener { beginSignInResult ->
 				try {
-					activity.startIntentSenderForResult(
+					activity!!.startIntentSenderForResult(
 						beginSignInResult.getPendingIntent().getIntentSender(),
 						REQUEST_ONE_TAP,
 						null,
@@ -76,7 +79,7 @@ class GoogleAuthDelegate(context: android.content.Context) : Activity() {
 				}
 			}
 			.addOnFailureListener { e ->
-				activity.startActivityForResult(
+				activity!!.startActivityForResult(
 					GoogleSignIn
 						.getClient(
 							context,

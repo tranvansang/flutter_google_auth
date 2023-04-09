@@ -5,17 +5,19 @@
 Pod::Spec.new do |s|
   s.name             = 'google_auth'
   s.version          = '0.0.1'
-  s.summary          = 'A new Flutter plugin project.'
+  s.summary          = 'Google Authentication.'
   s.description      = <<-DESC
-A new Flutter plugin project.
+Flutter plugin to authenticate with Google.
                        DESC
-  s.homepage         = 'http://example.com'
+  s.homepage         = 'http://transang.me'
   s.license          = { :file => '../LICENSE' }
-  s.author           = { 'Your Company' => 'email@example.com' }
+  s.author           = { 'Tran Sang' => 'me@transa.ng' }
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter'
-  s.platform = :ios, '9.0'
+  s.dependency 'FBSDKLoginKit'
+  s.dependency 'GoogleSignIn'
+  s.platform = :ios, '12.0'
 
   # Flutter.framework does not contain a i386 slice.
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }
