@@ -29,7 +29,7 @@ class GoogleAuthMethodCallHandler(private val delegate: GoogleAuthDelegate) :
 	}
 
 	companion object {
-		private const val METHOD_SIGN_IN = "sign-in"
-		private const val METHOD_SIGN_OUT = "sign-out"
+		private const val METHOD_SIGN_IN = "signIn"
+		private const val METHOD_SIGN_OUT = "signOut"
 	}
 }

@@ -2,8 +2,8 @@ import Flutter
 import UIKit
 
 struct MethodName {
-	static let METHOD_SIGN_IN = "sign-in"
-	static let METHOD_SIGN_OUT = "sign-out"
+	static let METHOD_SIGN_IN = "signIn"
+	static let METHOD_SIGN_OUT = "signOut"
 }
 
 public class GoogleAuthPluginSwift: NSObject, FlutterPlugin {
