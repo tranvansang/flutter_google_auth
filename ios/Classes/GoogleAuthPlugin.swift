@@ -20,8 +20,7 @@ public class GoogleAuthPluginSwift: NSObject, FlutterPlugin {
             delegate.signIn(with: args?["clientId"] as! String, result: result)
 			break
 		case "signOut":
-			delegate.signOut()
-            result(nil)
+			delegate.signOut(with: result)
 			break
 		default:
 			result(FlutterMethodNotImplemented)
