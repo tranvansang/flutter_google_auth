@@ -1,17 +1,11 @@
 import Flutter
 import UIKit
 
-struct MethodName {
-	static let METHOD_SIGN_IN = "signIn"
-	static let METHOD_SIGN_OUT = "signOut"
-}
-
 public class GoogleAuthPluginSwift: NSObject, FlutterPlugin {
-	static let CHANNEL_NAME = "me.transang.plugins.google_auth/channel"
 	let delegate = GoogleAuthDelegate()
 
 	public static func register(with registrar: FlutterPluginRegistrar) {
-		let channel = FlutterMethodChannel(name: CHANNEL_NAME, binaryMessenger: registrar.messenger())
+		let channel = FlutterMethodChannel(name:"me.transang.plugins.google_auth/channel", binaryMessenger: registrar.messenger())
 		let instance = GoogleAuthPluginSwift()
         registrar.addApplicationDelegate(instance)
 		registrar.addMethodCallDelegate(instance, channel: channel)
@@ -22,10 +16,10 @@ public class GoogleAuthPluginSwift: NSObject, FlutterPlugin {
 
 		switch call.method {
 
-		case MethodName.METHOD_SIGN_IN:
+		case "signIn":
             delegate.signIn(with: args?["clientId"] as! String, result: result)
 			break
-		case MethodName.METHOD_SIGN_OUT:
+		case "signOut":
 			delegate.signOut()
             result(nil)
 			break
