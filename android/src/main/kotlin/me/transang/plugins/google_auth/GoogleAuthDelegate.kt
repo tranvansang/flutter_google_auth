@@ -2,6 +2,7 @@ package me.transang.plugins.google_auth
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.IntentSender.SendIntentException
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.identity.Identity
@@ -10,25 +11,28 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import io.flutter.plugin.common.MethodChannel
 
-class GoogleAuthDelegate(private val applicationContext: Context) {
+class GoogleAuthDelegate(private val activity: Activity, private val applicationContext: Context) {
 	private val signInClient: SignInClient = Identity.getSignInClient(applicationContext)
+	private var resultConsumer: ResultConsumer<Any>? = null
 
-	val activityResultListener = GoogleAuthActivityResultListener({
+	fun onRequestOnTap(intent: Intent?) {
 		try {
 //					SignInCredential signInCredential = signInClient.getSignInCredentialFromIntent(data);
 //					String idToken = signInCredential.getGoogleIdToken();
 //					String username = signInCredential.getId();
 //					String password = signInCredential.getPassword();
-			val token = signInClient.getSignInCredentialFromIntent(it).googleIdToken
+			val token = signInClient.getSignInCredentialFromIntent(intent).googleIdToken
 			if (token != null) resultConsumer?.consume(token)
 			else resultConsumer?.throwError(Exception("Empty token returned"))
 		} catch (e: Exception) {
 			resultConsumer?.throwError(e)
 		}
-	}, {
-		if (it != null) {
+	}
+
+	fun onRequestCodeSignIn(intent: Intent?) {
+		if (intent != null) {
 			GoogleSignIn
-				.getSignedInAccountFromIntent(it)
+				.getSignedInAccountFromIntent(intent)
 				.addOnSuccessListener { account ->
 					run {
 						val token = account.idToken
@@ -38,12 +42,8 @@ class GoogleAuthDelegate(private val applicationContext: Context) {
 				}
 				.addOnFailureListener { e -> resultConsumer?.throwError(e) }
 		} else {
-			// data is null which is highly unusual for a sign in result.
-			resultConsumer?.throwError(null)
 		}
-	})
-	private var resultConsumer: ResultConsumer<Any>? = null
-	var activity: Activity? = null
+	}
 
 	private fun setup(result: MethodChannel.Result) {
 		if (resultConsumer != null) {
@@ -74,9 +74,9 @@ class GoogleAuthDelegate(private val applicationContext: Context) {
 			)
 			.addOnSuccessListener { beginSignInResult ->
 				try {
-					activity!!.startIntentSenderForResult(
+					activity.startIntentSenderForResult(
 						beginSignInResult.pendingIntent.intentSender,
-						GoogleAuthActivityResultListener.REQUEST_ONE_TAP,
+						REQUEST_ONE_TAP,
 						null,
 						0,
 						0,
@@ -90,7 +90,7 @@ class GoogleAuthDelegate(private val applicationContext: Context) {
 				}
 			}
 			.addOnFailureListener {
-				activity!!.startActivityForResult(
+				activity.startActivityForResult(
 					GoogleSignIn
 						.getClient(
 							applicationContext,
@@ -99,7 +99,7 @@ class GoogleAuthDelegate(private val applicationContext: Context) {
 								.build()
 						)
 						.signInIntent,
-					GoogleAuthActivityResultListener.REQUEST_CODE_SIGN_IN
+					REQUEST_CODE_SIGN_IN
 				)
 			}
 	}
@@ -108,5 +108,10 @@ class GoogleAuthDelegate(private val applicationContext: Context) {
 		setup(result)
 		signInClient.signOut()
 		resultConsumer?.consume(true)
+	}
+
+	companion object {
+		const val REQUEST_ONE_TAP = 3000
+		const val REQUEST_CODE_SIGN_IN = 3001
 	}
 }

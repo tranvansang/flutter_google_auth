@@ -1,24 +1,25 @@
 package me.transang.plugins.google_auth
 
+import android.content.Intent
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugin.common.PluginRegistry
+import me.transang.plugins.google_auth.GoogleAuthDelegate.Companion.REQUEST_CODE_SIGN_IN
+import me.transang.plugins.google_auth.GoogleAuthDelegate.Companion.REQUEST_ONE_TAP
 
 class GoogleAuthPlugin : FlutterPlugin, ActivityAware {
-	private var delegate: GoogleAuthDelegate? = null
 	private var detachFromEngine: (() -> Unit)? = null
 	private var detachFromActivity: (() -> Unit)? = null
+	private var flutterPluginBinding: FlutterPlugin.FlutterPluginBinding? = null
 
 	// BEGIN attach to engine
-	override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-		val methodChannel = MethodChannel(flutterPluginBinding.binaryMessenger, CHANNEL_NAME)
-		delegate = GoogleAuthDelegate(flutterPluginBinding.applicationContext)
-		methodChannel.setMethodCallHandler(GoogleAuthMethodCallHandler(delegate!!))
+	override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
+		flutterPluginBinding = binding
 		detachFromEngine = {
-			methodChannel.setMethodCallHandler(null)
-			delegate = null
 			detachFromEngine = null
+			flutterPluginBinding = null
 		}
 	}
 
@@ -29,12 +30,62 @@ class GoogleAuthPlugin : FlutterPlugin, ActivityAware {
 
 	// BEGIN attach to activity
 	override fun onAttachedToActivity(binding: ActivityPluginBinding) {
-		binding.addActivityResultListener(delegate!!.activityResultListener)
-		delegate!!.activity = binding.activity
+		val pluginBinding = flutterPluginBinding!!
+		val methodChannel =
+			MethodChannel(pluginBinding.binaryMessenger, "me.transang.plugins.google_auth/channel")
+		val delegate = GoogleAuthDelegate(binding.activity, pluginBinding.applicationContext)
+
+		methodChannel.setMethodCallHandler { call, result ->
+			when (call.method) {
+				"signIn" -> //				List<String> requestedScopes = call.argument("scopes");
+					//				String hostedDomain = call.argument("hostedDomain");
+					try {
+						val clientId: String? = call.argument("clientId")
+						if (clientId == null) result.error(
+							"Error initializing sign in",
+							"clientId is required",
+							null
+						)
+						else delegate.signIn(
+							clientId,
+							result
+						)
+					} catch (e: Exception) {
+						result.error("Error when sign in", e.message, null)
+					}
+
+				"signOut" -> try {
+					delegate.signOut(result)
+				} catch (e: Exception) {
+					result.error("Error when sign out", e.message, null)
+				}
+
+				else -> result.notImplemented()
+			}
+		}
+
+		val activityResultListener = object : PluginRegistry.ActivityResultListener {
+			override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
+				when (requestCode) {
+					REQUEST_ONE_TAP -> {
+						delegate.onRequestOnTap(data)
+						return true
+					}
+
+					REQUEST_CODE_SIGN_IN -> {
+						delegate.onRequestCodeSignIn(data)
+						return true
+					}
+				}
+				return false
+			}
+		}
+		binding.addActivityResultListener(activityResultListener)
+
 		detachFromActivity = {
-			delegate!!.activity = null
-			binding.removeActivityResultListener(delegate!!.activityResultListener)
 			detachFromActivity = null
+			binding.removeActivityResultListener(activityResultListener)
+			methodChannel.setMethodCallHandler(null)
 		}
 	}
 
@@ -52,9 +103,4 @@ class GoogleAuthPlugin : FlutterPlugin, ActivityAware {
 		onAttachedToActivity(binding)
 	}
 	// END temporary detach from activity
-
-
-	companion object {
-		private const val CHANNEL_NAME = "me.transang.plugins.google_auth/channel"
-	}
 }

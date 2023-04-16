@@ -13,6 +13,7 @@ class ResultConsumer<T>(
 	private var isDone = false
 	fun throwError(e: Exception?) {
 		if (isDone) throw Exception("ResultConsumer is already done")
+		end()
 		when (e) {
 			is SendIntentException -> {
 				result.error("FAIL_TO_SEND_INTENT", e.message, e)
@@ -41,13 +42,12 @@ class ResultConsumer<T>(
 			)
 			else -> result.error("OTHER", e.message, e)
 		}
-		end()
 	}
 
 	fun consume(value: T) {
 		if (isDone) throw Exception("ResultConsumer is already done")
-		result.success(value)
 		end()
+		result.success(value)
 	}
 
 	private fun end() {
