@@ -15,7 +15,6 @@ Flutter plugin to authenticate with Google.
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter'
-  s.dependency 'FBSDKLoginKit'
   s.dependency 'GoogleSignIn'
   s.platform = :ios, '12.0'
 
