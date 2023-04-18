@@ -16,14 +16,14 @@ class GoogleAuthDelegate: NSObject {
 	}
 
 	private func authenticate(authentication: GIDAuthentication) {
-		authentication.do { authentication, error in
+		authentication.do { [self] authentication, error in
 			guard error == nil else {
-				return self.throwError(code: ERR_OTHER, message: "Fail to login with google, cannot obtain authentication", details: error)
+				return finish(code: ERR_OTHER, message: "Fail to login with google, cannot obtain authentication", details: error)
 			}
 			guard let authentication = authentication else {
-				return self.throwError(code: ERR_EMPTY_TOKEN_RETURNED, message: "Fail to login with google, empty authentication", details: nil)
+				return finish(code: ERR_EMPTY_TOKEN_RETURNED, message: "Fail to login with google, empty authentication", details: nil)
 			}
-			self.returnResult(value: authentication.idToken as Any)
+			finish(value: authentication.idToken as Any)
 		}
 	}
 
@@ -36,7 +36,7 @@ class GoogleAuthDelegate: NSObject {
 				let configuration = GIDConfiguration(clientID: clientId)
 				instance.signIn(with: configuration, presenting: topViewController, callback: { [self] user, error in
 					guard let user = user else {
-						return throwError(code: ERR_OTHER, message: "Fail to call login on GIDSignIn instance", details: nil)
+						return finish(code: ERR_OTHER, message: "Fail to call login on GIDSignIn instance", details: nil)
 					}
 					authenticate(authentication: user.authentication)
 				})
@@ -51,7 +51,7 @@ class GoogleAuthDelegate: NSObject {
 			return
 		}
 		instance.signOut()
-		returnResult(value: true)
+		finish(value: true)
 	}
 
 	private var topViewController: UIViewController {
@@ -98,14 +98,14 @@ class GoogleAuthDelegate: NSObject {
 		self.result = result
 		return true
 	}
-	private func returnResult(value: Any) {
+	private func finish(value: Any) {
 		guard result != nil else {
 			return NSLog("Operation is already done")
 		}
 		result!(value)
 		result = nil
 	}
-	private func throwError(code: String, message: String, details: Any? = nil) {
+	private func finish(code: String, message: String, details: Any? = nil) {
 		guard result != nil else {
 			return NSLog("Operation is already done")
 		}
