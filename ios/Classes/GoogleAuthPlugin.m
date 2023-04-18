@@ -10,6 +10,6 @@
 
 @implementation GoogleAuthPlugin
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
-  [GoogleAuthPluginSwift registerWithRegistrar:registrar];
+	[GoogleAuthPluginSwift registerWithRegistrar:registrar];
 }
 @end
