@@ -1,49 +1,57 @@
 import Flutter
 import GoogleSignIn
 
+let ERR_PARAM_REQUIRED = "PARAM_REQUIRED"
+let ERR_META_OPERATION_IN_PROGRESS = "META_OPERATION_IN_PROGRESS"
+let ERR_OTHER = "OTHER"
+
+let ERR_EMPTY_TOKEN_RETURNED = "EMPTY_TOKEN_RETURNED"
+
+
 class GoogleAuthDelegate: NSObject {
 	let instance: GIDSignIn = GIDSignIn.sharedInstance
+	var result: FlutterResult? = nil
 
 	public func handleUrl(open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
 		return instance.handle(url)
 	}
 
-	private func authenticate(authentication: GIDAuthentication, result: @escaping FlutterResult) {
+	private func authenticate(authentication: GIDAuthentication) {
 		authentication.do { authentication, error in
 			guard error == nil else {
-				result(FlutterError(code: "FAIL_TO_GET_AUTHENTICATION", message: "Fail to login with google, cannot obtain authentication", details: nil))
-				return
+				return throwError(code: ERR_OTHER, message: "Fail to login with google, cannot obtain authentication", details: error)
 			}
 			guard let authentication = authentication else {
-				result(FlutterError(code: "AUTHENTICATION_EMPTY", message: "Fail to login with google, empty authentication", details: nil))
-				return
+				return throwError(code: ERR_EMPTY_TOKEN_RETURNED, message: "Fail to login with google, empty authentication", details: nil)
 			}
-			result(authentication.idToken)
+			returnResult(value: authentication.idToken)
 		}
 	}
 
 	public func signIn(clientId: String, result: @escaping FlutterResult) {
+		if (!setup(result: result)) {
+			return
+		}
 		instance.restorePreviousSignIn(callback: { [self]user, error in
-			if error != nil || user == nil {
-				let configuration = GIDConfiguration(clientID: clientId)
-				instance.signIn(with: configuration, presenting: topViewController, callback: { [self]
-					user,
-					error in
-					guard let user = user else {
-						result(FlutterError(code: "FAIL_TO_LOGIN", message: "Fail to login with google", details: nil))
-						return
-					}
-					authenticate(authentication: user.authentication, result: result)
-				})
-			} else {
-				authenticate(authentication: user!.authentication, result: result)
+			guard error == nil && user != nil else {
+				return authenticate(authentication: user!.authentication)
 			}
+			let configuration = GIDConfiguration(clientID: clientId)
+			instance.signIn(with: configuration, presenting: topViewController, callback: { [self] user, error in
+				guard let user = user else {
+					return throwError(code: ERR_OTHER, message: "Fail to call login on GIDSignIn instance", details: nil)
+				}
+				authenticate(authentication: user.authentication)
+			})
 		})
 	}
 
 	public func signOut(result: @escaping FlutterResult) {
+		if (!setup(result: result)) {
+			return
+		}
 		instance.signOut()
-		result(nil)
+		returnResult(value: true)
 	}
 
 	private var topViewController: UIViewController {
@@ -79,4 +87,29 @@ class GoogleAuthDelegate: NSObject {
 		}
 		return viewController
 	}
+	
+	// result consumer BEGIN
+	private func setup(result: @escaping FlutterResult) -> Bool {
+		guard self.result != nil else {
+			result(FlutterError(code: ERR_META_OPERATION_IN_PROGRESS, message: "Operation in progress", details: nil))
+			return false
+		}
+		self.result = result
+		return true
+	}
+	private func returnResult(value: Any) {
+		guard result == nil else {
+			return NSLog("Operation is already done")
+		}
+		result!(value)
+		result = nil
+	}
+	private func throwError(code: String, message: String, details: Any? = nil) {
+		guard result != nil else {
+			return NSLog("Operation is already done")
+		}
+		result!(FlutterError(code: code, message: message, details: details))
+		result = nil
+	}
+	// result consumer END
 }
