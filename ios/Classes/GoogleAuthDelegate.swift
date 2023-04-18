@@ -10,7 +10,6 @@ let ERR_EMPTY_TOKEN_RETURNED = "EMPTY_TOKEN_RETURNED"
 
 class GoogleAuthDelegate: NSObject {
 	let instance: GIDSignIn = GIDSignIn.sharedInstance
-	var result: FlutterResult? = nil
 
 	public func handleUrl(open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
 		return instance.handle(url)
@@ -34,15 +33,16 @@ class GoogleAuthDelegate: NSObject {
 		}
 		instance.restorePreviousSignIn(callback: { [self]user, error in
 			guard error == nil && user != nil else {
-				return authenticate(authentication: user!.authentication)
+				let configuration = GIDConfiguration(clientID: clientId)
+				instance.signIn(with: configuration, presenting: topViewController, callback: { [self] user, error in
+					guard let user = user else {
+						return throwError(code: ERR_OTHER, message: "Fail to call login on GIDSignIn instance", details: nil)
+					}
+					authenticate(authentication: user.authentication)
+				})
+				return
 			}
-			let configuration = GIDConfiguration(clientID: clientId)
-			instance.signIn(with: configuration, presenting: topViewController, callback: { [self] user, error in
-				guard let user = user else {
-					return throwError(code: ERR_OTHER, message: "Fail to call login on GIDSignIn instance", details: nil)
-				}
-				authenticate(authentication: user.authentication)
-			})
+			authenticate(authentication: user!.authentication)
 		})
 	}
 
@@ -89,8 +89,9 @@ class GoogleAuthDelegate: NSObject {
 	}
 	
 	// result consumer BEGIN
+	var result: FlutterResult? = nil
 	private func setup(result: @escaping FlutterResult) -> Bool {
-		guard self.result != nil else {
+		guard self.result == nil else {
 			result(FlutterError(code: ERR_META_OPERATION_IN_PROGRESS, message: "Operation in progress", details: nil))
 			return false
 		}
@@ -98,7 +99,7 @@ class GoogleAuthDelegate: NSObject {
 		return true
 	}
 	private func returnResult(value: Any) {
-		guard result == nil else {
+		guard result != nil else {
 			return NSLog("Operation is already done")
 		}
 		result!(value)
