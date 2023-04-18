@@ -24,7 +24,7 @@ class GoogleAuthDelegate: NSObject {
 			guard let authentication = authentication else {
 				return self.throwError(code: ERR_EMPTY_TOKEN_RETURNED, message: "Fail to login with google, empty authentication", details: nil)
 			}
-			self.returnResult(value: authentication.idToken)
+			self.returnResult(value: authentication.idToken as Any)
 		}
 	}
 
