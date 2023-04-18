@@ -17,8 +17,13 @@ import io.flutter.plugin.common.MethodChannel
 class GoogleAuthDelegate(private val activity: Activity, private val applicationContext: Context) :
 	ResultConsumer() {
 	companion object {
+		const val ERR_PARAM_REQUIRED = "PARAM_REQUIRED"
+		const val ERR_META_OPERATION_IN_PROGRESS = "META_OPERATION_IN_PROGRESS"
+		const val ERR_OTHER = "OTHER"
+
 		const val ERR_EMPTY_TOKEN_RETURNED = "EMPTY_TOKEN_RETURNED"
 		const val ERR_FAIL_TO_SEND_INTENT = "FAIL_TO_SEND_INTENT"
+
 		const val ERR_API_SIGN_IN_REQUIRED = "API_SIGN_IN_REQUIRED"
 		const val ERR_API_INVALID_ACCOUNT = "API_INVALID_ACCOUNT"
 		const val ERR_API_RESOLUTION_REQUIRED = "API_RESOLUTION_REQUIRED"
@@ -34,10 +39,10 @@ class GoogleAuthDelegate(private val activity: Activity, private val application
 		const val ERR_API_CONNECTION_SUSPENDED_DURING_CALL = "API_CONNECTION_SUSPENDED_DURING_CALL"
 		const val ERR_API_RECONNECTION_TIMED_OUT_DURING_UPDATE = "API_RECONNECTION_TIMED_OUT_DURING_UPDATE"
 		const val ERR_API_RECONNECTION_TIMED_OUT = "API_RECONNECTION_TIMED_OUT"
+
 		const val ERR_GSI_SIGN_IN_FAILED = "GSI_SIGN_IN_FAILED"
 		const val ERR_GSI_SIGN_IN_CANCELLED = "GSI_SIGN_IN_CANCELLED"
 		const val ERR_GSI_SIGN_IN_CURRENTLY_IN_PROGRESS = "GSI_SIGN_IN_CURRENTLY_IN_PROGRESS"
-		const val ERR_OTHER = "OTHER"
 
 		const val REQUEST_ONE_TAP = 3000
 		const val REQUEST_CODE_SIGN_IN = 3001

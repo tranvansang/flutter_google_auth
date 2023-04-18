@@ -6,6 +6,8 @@ import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.PluginRegistry
+import me.transang.plugins.google_auth.GoogleAuthDelegate.Companion.ERR_OTHER
+import me.transang.plugins.google_auth.GoogleAuthDelegate.Companion.ERR_PARAM_REQUIRED
 import me.transang.plugins.google_auth.GoogleAuthDelegate.Companion.REQUEST_CODE_SIGN_IN
 import me.transang.plugins.google_auth.GoogleAuthDelegate.Companion.REQUEST_ONE_TAP
 
@@ -36,31 +38,26 @@ class GoogleAuthPlugin : FlutterPlugin, ActivityAware {
 		val delegate = GoogleAuthDelegate(binding.activity, pluginBinding.applicationContext)
 
 		methodChannel.setMethodCallHandler { call, result ->
-			when (call.method) {
-				"signIn" -> //				List<String> requestedScopes = call.argument("scopes");
-					//				String hostedDomain = call.argument("hostedDomain");
-					try {
+			try {
+				when (call.method) {
+					"signIn" -> //				List<String> requestedScopes = call.argument("scopes");
+						//				String hostedDomain = call.argument("hostedDomain");
+					{
 						val clientId: String? = call.argument("clientId")
 						if (clientId == null) result.error(
-							"Error initializing sign in",
-							"clientId is required",
-							null
+							ERR_PARAM_REQUIRED, "clientId is required", null
 						)
 						else delegate.signIn(
-							clientId,
-							result
+							clientId, result
 						)
-					} catch (e: Exception) {
-						result.error("Error when sign in", e.message, null)
 					}
 
-				"signOut" -> try {
-					delegate.signOut(result)
-				} catch (e: Exception) {
-					result.error("Error when sign out", e.message, null)
-				}
+					"signOut" -> delegate.signOut(result)
 
-				else -> result.notImplemented()
+					else -> result.notImplemented()
+				}
+			} catch (e: Exception) {
+				result.error(ERR_OTHER, e.message, e)
 			}
 		}
 

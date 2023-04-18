@@ -1,16 +1,13 @@
 package me.transang.plugins.google_auth
 
-import android.content.IntentSender.SendIntentException
-import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
-import com.google.android.gms.common.api.ApiException
-import com.google.android.gms.common.api.CommonStatusCodes
 import io.flutter.plugin.common.MethodChannel
+import me.transang.plugins.google_auth.GoogleAuthDelegate.Companion.ERR_META_OPERATION_IN_PROGRESS
 
 open class ResultConsumer {
 	private var result: MethodChannel.Result? = null
 	protected fun setup(newResult: MethodChannel.Result): Boolean {
 		if (result != null) {
-			newResult.error("ALREADY_IN_PROGRESS", "Operation in progress", null)
+			newResult.error(ERR_META_OPERATION_IN_PROGRESS, "Operation in progress", null)
 			return false
 		}
 		result = newResult
