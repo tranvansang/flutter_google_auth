@@ -1,12 +1,13 @@
+import Flutter
 import GoogleSignIn
 
 class GoogleAuthDelegate: NSObject {
 	let instance: GIDSignIn = GIDSignIn.sharedInstance
-	
+
 	public func handleUrl(open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
 		return instance.handle(url)
 	}
-	
+
 	private func authenticate(authentication: GIDAuthentication, result: @escaping FlutterResult) {
 		authentication.do { authentication, error in
 			guard error == nil else {
@@ -20,8 +21,8 @@ class GoogleAuthDelegate: NSObject {
 			result(authentication.idToken)
 		}
 	}
-	
-	public func signIn(with clientId: String, result: @escaping FlutterResult) {
+
+	public func signIn(clientId: String, result: @escaping FlutterResult) {
 		instance.restorePreviousSignIn(callback: { [self]user, error in
 			if error != nil || user == nil {
 				let configuration = GIDConfiguration(clientID: clientId)
@@ -39,12 +40,12 @@ class GoogleAuthDelegate: NSObject {
 			}
 		})
 	}
-	
-	public func signOut(with result: @escaping FlutterResult) {
+
+	public func signOut(result: @escaping FlutterResult) {
 		instance.signOut()
 		result(nil)
 	}
-	
+
 	private var topViewController: UIViewController {
 		//#pragma clang diagnostic push
 		//#pragma clang diagnostic ignored "-Wdeprecated-declarations"
@@ -54,7 +55,7 @@ class GoogleAuthDelegate: NSObject {
 			from: UIApplication.shared.keyWindow?.rootViewController)
 		//#pragma clang diagnostic pop
 	}
-	
+
 	/**
 	 * This method recursively iterate through the view hierarchy
 	 * to return the top most view controller.
@@ -72,7 +73,7 @@ class GoogleAuthDelegate: NSObject {
 			let tabController: UITabBarController! = (viewController as! UITabBarController)
 			return topViewController(from: tabController.selectedViewController)
 		}
-		
+
 		if (viewController.presentedViewController != nil) {
 			return topViewController(from: viewController.presentedViewController)
 		}
