@@ -19,12 +19,12 @@ class GoogleAuthDelegate: NSObject {
 	private func authenticate(authentication: GIDAuthentication) {
 		authentication.do { authentication, error in
 			guard error == nil else {
-				return throwError(code: ERR_OTHER, message: "Fail to login with google, cannot obtain authentication", details: error)
+				return self.throwError(code: ERR_OTHER, message: "Fail to login with google, cannot obtain authentication", details: error)
 			}
 			guard let authentication = authentication else {
-				return throwError(code: ERR_EMPTY_TOKEN_RETURNED, message: "Fail to login with google, empty authentication", details: nil)
+				return self.throwError(code: ERR_EMPTY_TOKEN_RETURNED, message: "Fail to login with google, empty authentication", details: nil)
 			}
-			returnResult(value: authentication.idToken)
+			self.returnResult(value: authentication.idToken)
 		}
 	}
 
