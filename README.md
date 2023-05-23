@@ -47,3 +47,14 @@ try {
 ```
   - For iOS: see https://github.com/tranvansang/flutter_google_auth/tree/master/ios/Classes/GoogleAuthDelegate.swift#L4
   - For Android: see https://github.com/tranvansang/flutter_google_auth/tree/master/android/src/main/kotlin/me/transang/plugins/google_auth/GoogleAuthDelegate.kt#L20
+
+# SDK versions
+- Android
+```
+    implementation 'com.google.android.gms:play-services-auth:20.5.0'
+```
+
+- iOS
+```
+  s.dependency 'GoogleSignIn', '~> 7.0'
+```

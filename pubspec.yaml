@@ -1,6 +1,6 @@
 name: google_auth
 description: Google Auth plugin for Flutter.
-version: 0.0.1
+version: 0.0.2
 homepage: https://github.com/tranvansang/flutter_google_auth
 
 environment:
