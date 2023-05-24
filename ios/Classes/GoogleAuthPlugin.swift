@@ -12,16 +12,10 @@ public class GoogleAuthPlugin: NSObject, FlutterPlugin {
 	}
 	
 	public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-		let args = call.arguments as? [String: Any]
-		
 		switch call.method {
 			
 		case "signIn":
-			let clientId = args?["clientId"] as! String?
-			guard clientId != nil && clientId != "" else {
-				return result(FlutterError(code: ERR_PARAM_REQUIRED, message: "clientId is required", details: nil))
-			}
-			delegate.signIn(clientId: clientId!, result: result)
+			delegate.signIn(result: result)
 			break
 		case "signOut":
 			delegate.signOut(result: result)
