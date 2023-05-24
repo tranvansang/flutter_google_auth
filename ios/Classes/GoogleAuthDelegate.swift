@@ -37,16 +37,16 @@ class GoogleAuthDelegate: NSObject {
 			"idToken": user.idToken?.tokenString,
 			"idTokenExpire": user.idToken?.expirationDate?.timeIntervalSince1970 == nil
 				? nil
-				: user.idToken!.expirationDate!.timeIntervalSince1970 * 1000,
+				: Int64(user.idToken!.expirationDate!.timeIntervalSince1970 * 1000),
 			"accessToken": user.accessToken.tokenString,
 			"accessTokenExpire": user.accessToken.expirationDate == nil
 				? nil
-				: user.accessToken.expirationDate!.timeIntervalSince1970,
+				: Int64(user.accessToken.expirationDate!.timeIntervalSince1970 * 1000),
 			"userID": user.userID,
 			"refreshToken": user.refreshToken.tokenString,
 			"refreshTokenExpire": user.refreshToken.expirationDate == nil
 				? nil
-				: user.refreshToken.expirationDate!.timeIntervalSince1970 * 1000,
+				: Int64(user.refreshToken.expirationDate!.timeIntervalSince1970 * 1000),
 			"email": profile?.email,
 			"name": profile?.name,
 			"givenName": profile?.givenName,
