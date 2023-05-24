@@ -21,13 +21,13 @@ In `info.plist` add the following:
     <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-            <string>$(DEFINE_GOOGLE_CLIENT_ID_IOS)</string>
+            <string>$(DEFINE_GOOGLE_URL_SCHEME_IOS)</string>
         </array>
     </dict>
 </array>
 ```
 
-with `$(DEFINE_GOOGLE_CLIENT_ID_IOS)` being the client id of your app.
+with `$(DEFINE_GOOGLE_CLIENT_ID_IOS)`, `$(DEFINE_GOOGLE_URL_SCHEME_IOS)` being the client id (iOS) and iOS URL scheme of your app, respectively.
 
 # Usage
 
