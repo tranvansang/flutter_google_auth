@@ -13,6 +13,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.CommonStatusCodes
 import io.flutter.plugin.common.MethodChannel
+import java.util.*
 
 class GoogleAuthDelegate(private val activity: Activity, private val applicationContext: Context) :
 	ResultConsumer() {
@@ -57,7 +58,7 @@ class GoogleAuthDelegate(private val activity: Activity, private val application
 //					String username = signInCredential.getId();
 //					String password = signInCredential.getPassword();
 			val token = signInClient.getSignInCredentialFromIntent(intent).googleIdToken
-			if (token != null) returnResult(token)
+			if (token != null) returnResult(resultFromIdToken(token))
 			else throwError(ERR_EMPTY_TOKEN_RETURNED, "Empty token returned", null)
 		} catch (e: Exception) {
 			throwOtherError(e)
@@ -72,7 +73,7 @@ class GoogleAuthDelegate(private val activity: Activity, private val application
 					run {
 						val token = account.idToken
 						if (token == null) throwError(ERR_EMPTY_TOKEN_RETURNED, "Empty token returned", null)
-						else returnResult(token)
+						else returnResult(resultFromIdToken(token))
 					}
 				}
 				.addOnFailureListener { e -> throwError(ERR_OTHER, e.message, e) }
@@ -133,6 +134,12 @@ class GoogleAuthDelegate(private val activity: Activity, private val application
 		if (!setup(result)) return
 		signInClient.signOut()
 		returnResult(true)
+	}
+
+	private fun resultFromIdToken(idToken: String): HashMap<String, Any> {
+		val ret = HashMap<String, Any>()
+		ret["idToken"] = idToken
+		return ret
 	}
 
 	private fun throwOtherError(e: Exception) {
