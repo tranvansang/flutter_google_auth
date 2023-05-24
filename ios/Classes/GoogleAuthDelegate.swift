@@ -1,12 +1,8 @@
 import Flutter
 import GoogleSignIn
 
-let ERR_PARAM_REQUIRED = "PARAM_REQUIRED"
 let ERR_META_OPERATION_IN_PROGRESS = "META_OPERATION_IN_PROGRESS"
 let ERR_OTHER = "OTHER"
-
-let ERR_EMPTY_TOKEN_RETURNED = "EMPTY_TOKEN_RETURNED"
-
 
 class GoogleAuthDelegate: NSObject {
 	let instance: GIDSignIn = GIDSignIn.sharedInstance
@@ -15,34 +11,40 @@ class GoogleAuthDelegate: NSObject {
 		return instance.handle(url)
 	}
 
-	private func authenticate(authentication: GIDAuthentication) {
-		authentication.do { [self] authentication, error in
-			guard error == nil else {
-				return finish(code: ERR_OTHER, message: "Fail to login with google, cannot obtain authentication", details: error)
-			}
-			guard let authentication = authentication else {
-				return finish(code: ERR_EMPTY_TOKEN_RETURNED, message: "Fail to login with google, empty authentication", details: nil)
-			}
-			finish(value: authentication.idToken as Any)
-		}
+	private func authenticate(user: GIDGoogleUser) {
+		let profile = user.profile
+		let data = [
+			"idToken": user.idToken?.tokenString ?? "",
+			"idTokenExpire": (user.idToken?.expirationDate?.timeIntervalSince1970 ?? 0) * 1000,
+			"accessToken": user.accessToken.tokenString,
+			"accessTokenExpire": user.accessToken.expirationDate?.timeIntervalSince1970 * 1000,
+			"userID": user.userID,
+			"refreshToken": user.refreshToken.tokenString,
+			"refreshTokenExpire": user.refreshToken.expirationDate?.timeIntervalSince1970 * 1000,
+			"email": profile?.email,
+			"name": profile?.name,
+			"givenName": profile?.givenName,
+			"familyName": profile?.familyName,
+			"image": profile?.imageURL(withDimension: 1024),
+		] as [String : Any]
+		finish(value: data)
 	}
 
 	public func signIn(clientId: String, result: @escaping FlutterResult) {
 		if (!setup(result: result)) {
 			return
 		}
-		instance.restorePreviousSignIn(callback: { [self]user, error in
+		instance.restorePreviousSignIn(completion: { [self]user, error in
 			guard error == nil && user != nil else {
-				let configuration = GIDConfiguration(clientID: clientId)
-				instance.signIn(with: configuration, presenting: topViewController, callback: { [self] user, error in
-					guard let user = user else {
+				instance.signIn(withPresenting: topViewController) { [self] result, error in
+					guard let result = result else {
 						return finish(code: ERR_OTHER, message: "Fail to call login on GIDSignIn instance", details: nil)
 					}
-					authenticate(authentication: user.authentication)
-				})
+					authenticate(authentication: result!.user)
+				}
 				return
 			}
-			authenticate(authentication: user!.authentication)
+			authenticate(authentication: user)
 		})
 	}
 
@@ -87,7 +89,7 @@ class GoogleAuthDelegate: NSObject {
 		}
 		return viewController
 	}
-	
+
 	// result consumer BEGIN
 	var result: FlutterResult? = nil
 	private func setup(result: @escaping FlutterResult) -> Bool {
