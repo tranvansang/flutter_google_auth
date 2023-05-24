@@ -15,18 +15,12 @@ class GoogleAuthDelegate: NSObject {
 		if (!setup(result: result)) {
 			return
 		}
-		instance.restorePreviousSignIn(completion: { [self]user, error in
-			guard error == nil && user != nil else {
-				instance.signIn(withPresenting: topViewController) { [self] result, error in
-					guard let result = result else {
-						return finish(code: ERR_OTHER, message: "Fail to call login on GIDSignIn instance", details: nil)
-					}
-					finish(value: getReturnData(user: result.user))
-				}
-				return
+		instance.signIn(withPresenting: topViewController) { [self] result, error in
+			guard let result = result else {
+				return finish(code: ERR_OTHER, message: "Fail to call login on GIDSignIn instance", details: nil)
 			}
-			finish(value: getReturnData(user: user!))
-		})
+			finish(value: getReturnData(user: result.user))
+		}
 	}
 
 	public func signOut(result: @escaping FlutterResult) {
@@ -40,7 +34,7 @@ class GoogleAuthDelegate: NSObject {
 	private func getReturnData(user: GIDGoogleUser) -> [String : Any?] {
 		let profile = user.profile
 		let data = [
-			"idToken": user.idToken?.tokenString ?? "",
+			"idToken": user.idToken?.tokenString,
 			"idTokenExpire": user.idToken?.expirationDate?.timeIntervalSince1970 == nil
 				? nil
 				: user.idToken!.expirationDate!.timeIntervalSince1970 * 1000,
@@ -57,8 +51,9 @@ class GoogleAuthDelegate: NSObject {
 			"name": profile?.name,
 			"givenName": profile?.givenName,
 			"familyName": profile?.familyName,
-			"image": profile?.imageURL(withDimension: 1024),
+			"image": profile?.imageURL(withDimension: 1024)?.absoluteString,
 		] as [String : Any?]
+		print("debug: \(data)")
 		return data
 	}
 
