@@ -8,13 +8,13 @@ class GoogleAuth {
   factory GoogleAuth() => _instance;
 
   /// @return {
-  /// "idToken": String
-  /// "idTokenExpire": int // 0 if no idToken, otherwise timeIntervalSince1970 * 1000 (in milisec)
+  /// "idToken"?: String
+  /// "idTokenExpire"?: int
   /// "accessToken": String
-  /// "accessTokenExpire": int // otherwise timeIntervalSince1970 * 1000 (in milisec)
+  /// "accessTokenExpire"?: int
   /// "userID"?: String
   /// "refreshToken": String
-  /// "refreshTokenExpire": int // otherwise timeIntervalSince1970 * 1000 (in milisec)
+  /// "refreshTokenExpire"?: int
   /// "email"?: String
   /// "name"?: String
   /// "givenName"?: String

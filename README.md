@@ -39,7 +39,7 @@ with `$(DEFINE_GOOGLE_CLIENT_ID_IOS)`, `$(DEFINE_GOOGLE_URL_SCHEME_IOS)` being t
 This function returns a `Future` object resolving an object of the following format.
 ```
 {
-  "idToken": String
+  "idToken"?: String
   "idTokenExpire"?: int
   "accessToken": String
   "accessTokenExpire"?: int
