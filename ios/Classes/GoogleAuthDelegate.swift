@@ -11,26 +11,7 @@ class GoogleAuthDelegate: NSObject {
 		return instance.handle(url)
 	}
 
-	private func authenticate(user: GIDGoogleUser) {
-		let profile = user.profile
-		let data = [
-			"idToken": user.idToken?.tokenString ?? "",
-			"idTokenExpire": (user.idToken?.expirationDate?.timeIntervalSince1970 ?? 0) * 1000,
-			"accessToken": user.accessToken.tokenString,
-			"accessTokenExpire": user.accessToken.expirationDate?.timeIntervalSince1970 * 1000,
-			"userID": user.userID,
-			"refreshToken": user.refreshToken.tokenString,
-			"refreshTokenExpire": user.refreshToken.expirationDate?.timeIntervalSince1970 * 1000,
-			"email": profile?.email,
-			"name": profile?.name,
-			"givenName": profile?.givenName,
-			"familyName": profile?.familyName,
-			"image": profile?.imageURL(withDimension: 1024),
-		] as [String : Any]
-		finish(value: data)
-	}
-
-	public func signIn(clientId: String, result: @escaping FlutterResult) {
+	public func signIn(result: @escaping FlutterResult) {
 		if (!setup(result: result)) {
 			return
 		}
@@ -40,11 +21,11 @@ class GoogleAuthDelegate: NSObject {
 					guard let result = result else {
 						return finish(code: ERR_OTHER, message: "Fail to call login on GIDSignIn instance", details: nil)
 					}
-					authenticate(authentication: result!.user)
+					finish(value: getReturnData(user: result.user))
 				}
 				return
 			}
-			authenticate(authentication: user)
+			finish(value: getReturnData(user: user!))
 		})
 	}
 
@@ -54,6 +35,31 @@ class GoogleAuthDelegate: NSObject {
 		}
 		instance.signOut()
 		finish(value: true)
+	}
+
+	private func getReturnData(user: GIDGoogleUser) -> [String : Any?] {
+		let profile = user.profile
+		let data = [
+			"idToken": user.idToken?.tokenString ?? "",
+			"idTokenExpire": user.idToken?.expirationDate?.timeIntervalSince1970 == nil
+				? nil
+				: user.idToken!.expirationDate!.timeIntervalSince1970 * 1000,
+			"accessToken": user.accessToken.tokenString,
+			"accessTokenExpire": user.accessToken.expirationDate == nil
+				? nil
+				: user.accessToken.expirationDate!.timeIntervalSince1970,
+			"userID": user.userID,
+			"refreshToken": user.refreshToken.tokenString,
+			"refreshTokenExpire": user.refreshToken.expirationDate == nil
+				? nil
+				: user.refreshToken.expirationDate!.timeIntervalSince1970 * 1000,
+			"email": profile?.email,
+			"name": profile?.name,
+			"givenName": profile?.givenName,
+			"familyName": profile?.familyName,
+			"image": profile?.imageURL(withDimension: 1024),
+		] as [String : Any?]
+		return data
 	}
 
 	private var topViewController: UIViewController {
