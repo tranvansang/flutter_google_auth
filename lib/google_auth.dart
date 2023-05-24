@@ -7,7 +7,9 @@ class GoogleAuth {
   static final _instance = GoogleAuth._internal();
   factory GoogleAuth() => _instance;
 
-  /// @return {
+  /// @return
+  /// iOS
+  /// {
   /// "idToken"?: String
   /// "idTokenExpire"?: int
   /// "accessToken": String
@@ -21,15 +23,13 @@ class GoogleAuth {
   /// "familyName"?: String
   /// "image"?: String
   /// }
-  Future<Map<String, dynamic>> login(List<String> permissions) async {
-    return Map<String, dynamic>.from(await methodChannel.invokeMethod('login', {
-      'permissions': permissions,
-    }));
-  }
-
-  Future<Map<String, dynamic>> signIn() async {
+  /// Android
+  /// {
+  /// "idToken": String
+  /// }
+  Future<Map<String, dynamic>> signIn(String clientId) async {
     return Map<String, dynamic>.from(
-        await methodChannel.invokeMethod('signIn'));
+        await methodChannel.invokeMethod('signIn', {'clientId': clientId}));
   }
 
   Future<void> signOut() async {

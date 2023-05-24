@@ -33,10 +33,12 @@ with `$(DEFINE_GOOGLE_CLIENT_ID_IOS)`, `$(DEFINE_GOOGLE_URL_SCHEME_IOS)` being t
 
 - Add the plugin to `pubspec.yaml`: `flutter pub add google_auth`.
 - Import the plugin in your dart code: `import 'package:google_auth/google_auth.dart';`.
-- To authenticate user: `GoogleAuth().signIn()`.
-  - For Android, use the client id setup for **Web** app. Note: *if you use the client id setup for Android app, you will get an error saying that the developer console is not setup correctly*.
+- To authenticate user: `GoogleAuth().signIn(clientId)`, where `clientId` is:
+  - For Android, the client id setup for **Web** app. Note: *if you use the client id setup for Android app, you will get an error saying that the developer console is not setup correctly*.
+  - For iOS, this parameter is ignored, you can pass in any string.
 
 This function returns a `Future` object resolving an object of the following format.
+- iOS:
 ```
 {
   "idToken"?: String
@@ -51,6 +53,12 @@ This function returns a `Future` object resolving an object of the following for
   "givenName"?: String
   "familyName"?: String
   "image"?: String
+}
+```
+- Android:
+```
+{
+  "idToken": String
 }
 ```
 
